@@ -3,26 +3,24 @@
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:oauth="http://www.springframework.org/schema/security/oauth2"
        xmlns:sec="http://www.springframework.org/schema/security"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       xsi:schemaLocation="
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
+    http://www.springframework.org/schema/security/oauth2 http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd
+    http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
 
-       http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
-       http://www.springframework.org/schema/security
-       http://www.springframework.org/schema/security/spring-security-3.2.xsd
-       http://www.springframework.org/schema/security/oauth2
-       http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd
-       http://www.springframework.org/schema/context
-       http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
-    <!-- Definition of the Authentication Service -->
-    <http pattern="/searchapp/oauth/token" create-session="stateless" authentication-manager-ref="clientAuthenticationManager"
+
+    <http pattern="/oauth/token" create-session="never" authentication-manager-ref="clientAuthenticationManager"
           xmlns="http://www.springframework.org/schema/security">
-        <intercept-url pattern="/oauth/token" access="IS_AUTHENTICATED_FULLY"/>
-        <anonymous enabled="false"/>
-        <http-basic entry-point-ref="clientAuthenticationEntryPoint"/>
+        <intercept-url pattern="/oauth/token" access="IS_AUTHENTICATED_FULLY" />
+        <anonymous enabled="false" />
+        <http-basic />
         <!-- include this only if you need to authenticate clients via request parameters -->
-        <custom-filter ref="clientCredentialsTokenEndpointFilter" after="BASIC_AUTH_FILTER"/>
-        <access-denied-handler ref="oauthAccessDeniedHandler"/>
+        <custom-filter ref="clientCredentialsTokenEndpointFilter" before="BASIC_AUTH_FILTER" />
+        <access-denied-handler ref="oauthAccessDeniedHandler" />
     </http>
+
 
     <!-- Protected resources -->
     <http pattern="/api/**"
@@ -40,21 +38,21 @@
     </http>
 
     <bean id="oauthAuthenticationEntryPoint"
-          class="org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint">
+          class="org.springframework.security.oauth2.provider.error.MediaTypeAwareAuthenticationEntryPoint">
         <property name="realmName" value="dstest"/>
     </bean>
 
     <bean id="clientAuthenticationEntryPoint"
-          class="org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint">
+          class="org.springframework.security.oauth2.provider.error.MediaTypeAwareAuthenticationEntryPoint">
         <property name="realmName" value="dstest/client"/>
         <property name="typeName" value="Basic"/>
     </bean>
 
     <bean id="oauthAccessDeniedHandler"
-          class="org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler"/>
+          class="org.springframework.security.oauth2.provider.error.MediaTypeAwareAccessDeniedHandler"/>
 
     <bean id="clientCredentialsTokenEndpointFilter"
-          class="org.springframework.security.oauth2.provider.client.ClientCredentialsTokenEndpointFilter">
+          class=" org.springframework.security.oauth2.provider.filter.ClientCredentialsTokenEndpointFilter">
         <property name="authenticationManager" ref="clientAuthenticationManager"/>
     </bean>
 
@@ -89,40 +87,29 @@
 
     <!-- Token Store  -->
 
-    <bean id="tokenStore" class="org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore"/>
+    <bean id="tokenStore" class="org.springframework.security.oauth2.provider.token.InMemoryTokenStore" />
 
-    <bean id="approvalStore" class="org.springframework.security.oauth2.provider.approval.TokenApprovalStore">
-        <property name="tokenStore" ref="tokenStore"/>
-    </bean>
-
-    <bean id="userApprovalHandler"
-          class="org.springframework.security.oauth2.provider.approval.ApprovalStoreUserApprovalHandler">
-        <property name="approvalStore" ref="approvalStore"/>
-        <property name="clientDetailsService" ref="clientDetails"/>
-        <property name="requestFactory">
-            <bean class="org.springframework.security.oauth2.provider.request.DefaultOAuth2RequestFactory">
-                <constructor-arg index="0" ref="clientDetails"/>
-            </bean>
-        </property>
+    <bean id="tokenServices" class="org.springframework.security.oauth2.provider.token.RandomValueTokenServices">
+        <property name="tokenStore" ref="tokenStore" />
+        <property name="supportRefreshToken" value="true" />
     </bean>
 
 
 
-
-
-    <bean id="tokenServices" class="org.springframework.security.oauth2.provider.token.DefaultTokenServices">
+    <!-- <bean id="tokenServices" class="org.springframework.security.oauth2.provider.token.RandomValueTokenServices">
         <property name="tokenStore" ref="tokenStore"/>
         <property name="supportRefreshToken" value="true"/>
         <property name="clientDetailsService" ref="clientDetails"/>
-        <!-- VIV -->
         <property name="accessTokenValiditySeconds" value="10"/>
-    </bean>
+    </bean> -->
 
 
 
     <!-- Token management -->
-    <oauth:authorization-server client-details-service-ref="clientDetails" token-services-ref="tokenServices"
-                                user-approval-handler-ref="userApprovalHandler">
+
+
+
+    <oauth:authorization-server client-details-service-ref="clientDetails" token-services-ref="tokenServices">
         <oauth:authorization-code/>
         <oauth:implicit/>
         <oauth:refresh-token/>
@@ -134,16 +121,13 @@
                            resource-id="dstest"
                            token-services-ref="tokenServices"/>
 
-    <!-- Client Definition -->
+    <!-- Client Definition  redirect-uri="/web"-->
     <oauth:client-details-service id="clientDetails">
 
         <oauth:client client-id="my-trusted-client"
                       authorized-grant-types="password,authorization_code,refresh_token,implicit,redirect"
                       authorities="ROLE_CLIENT, ROLE_TRUSTED_CLIENT"
-                      redirect-uri="/web"
-                      scope="read,write,trust"
-                      access-token-validity="30"
-                      refresh-token-validity="600"/>
+                      scope="read"/>
 
     </oauth:client-details-service>
 
@@ -152,6 +136,13 @@
         <sec:expression-handler ref="oauthExpressionHandler"/>
     </sec:global-method-security>
     <oauth:expression-handler id="oauthExpressionHandler"/>
-    <oauth:web-expression-handler id="oauthWebExpressionHandler"/>
 
+    <bean id="jacksonMessageConverter" class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter"></bean>
+    <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+        <property name="messageConverters">
+            <list>
+                <ref bean="jacksonMessageConverter"/>
+            </list>
+        </property>
+    </bean>
 </beans>
