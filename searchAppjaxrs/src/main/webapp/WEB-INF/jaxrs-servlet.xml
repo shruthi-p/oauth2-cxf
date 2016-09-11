@@ -26,145 +26,6 @@
     <import resource="classpath:META-INF/cxf/cxf-servlet.xml" />
 
 
-
-
-
-    <!-- HTTP Root Access configuration -->
-    <!-- <sec:http pattern="/api/**" create-session="never" access-decision-manager-ref="accessDecisionManager"
-              entry-point-ref="oauthAuthenticationEntryPoint" use-expressions="true" auto-config="true">
-        <sec:anonymous enabled="false"/>
-        <sec:intercept-url pattern="/api/**" access="ROLE_USER"/>
-        <sec:custom-filter ref="resourceServerFilter" before="PRE_AUTH_FILTER"/>
-        <sec:access-denied-handler ref="oauthAccessDeniedHandler"/>
-        <sec:expression-handler ref="oauthWebExpressionHandler"/>
-    </sec:http>
-
-
-    <bean id="oauthAuthenticationEntryPoint"
-          class="org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint">
-        <property name="realmName" value="conference"/>
-    </bean>
-
-    <bean id="oauthAccessDeniedHandler"
-          class="org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler"/>
-
-    <bean id="accessDecisionManager" class="org.springframework.security.access.vote.UnanimousBased">
-        <constructor-arg>
-            <list>
-                <bean class="org.springframework.security.oauth2.provider.vote.ScopeVoter"/>
-                <bean class="org.springframework.security.access.vote.AuthenticatedVoter"/>
-                <bean class="org.springframework.security.web.access.expression.WebExpressionVoter">
-                    <property name="expressionHandler" ref="oauthWebExpressionHandler"/>
-                </bean>
-            </list>
-        </constructor-arg>
-    </bean>
-
-    <oauth:web-expression-handler id="oauthWebExpressionHandler"/>
-
-    <sec:http pattern="/oauth/token" create-session="stateless"
-              authentication-manager-ref="clientAuthenticationManager">
-        <sec:intercept-url pattern="/oauth/token" access="IS_AUTHENTICATED_FULLY"/>
-        <sec:anonymous enabled="false"/>
-        <sec:http-basic entry-point-ref="clientAuthenticationEntryPoint"/>
-        <sec:custom-filter ref="clientCredentialsTokenEndpointFilter" before="BASIC_AUTH_FILTER"/>
-        <sec:access-denied-handler ref="oauthAccessDeniedHandler"/>
-    </sec:http>
-
-    <bean id="tokenServices" class="org.springframework.security.oauth2.provider.token.DefaultTokenServices">
-        <property name="tokenStore" ref="tokenStore"/>
-        <property name="supportRefreshToken" value="true"/>
-        <property name="accessTokenValiditySeconds" value="300000"/>
-        <property name="clientDetailsService" ref="clientDetails"/>
-    </bean>
-
-    <bean id="tokenStore" class="org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore"/>
-
-    <bean id="approvalStore" class="org.springframework.security.oauth2.provider.approval.TokenApprovalStore">
-        <property name="tokenStore" ref="tokenStore"/>
-    </bean>
-
-    <bean id="userApprovalHandler"
-          class="org.springframework.security.oauth2.provider.approval.ApprovalStoreUserApprovalHandler">
-        <property name="approvalStore" ref="approvalStore"/>
-        <property name="clientDetailsService" ref="clientDetails"/>
-        <property name="requestFactory">
-            <bean class="org.springframework.security.oauth2.provider.request.DefaultOAuth2RequestFactory">
-                <constructor-arg index="0" ref="clientDetails"/>
-            </bean>
-        </property>
-    </bean>
-
-    <oauth:authorization-server client-details-service-ref="clientDetails" token-services-ref="tokenServices"
-                                user-approval-handler-ref="userApprovalHandler">
-        <oauth:authorization-code/>
-        <oauth:implicit/>
-        <oauth:refresh-token/>
-        <oauth:client-credentials/>
-        <oauth:password/>
-    </oauth:authorization-server>
-
-    <oauth:resource-server id="resourceServerFilter" resource-id="conference" token-services-ref="tokenServices"/>
-
-    <bean id="clientCredentialsTokenEndpointFilter"
-
-          class="org.springframework.security.oauth2.provider.client.ClientCredentialsTokenEndpointFilter">
-    <property name="authenticationManager" ref="clientAuthenticationManager"/>
-    </bean>
-    <bean id="clientAuthenticationEntryPoint"
-          class="org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint">
-        <property name="realmName" value="conference/client"/>
-        <property name="typeName" value="Basic"/>
-    </bean>
-
-    <bean id="clientDetailsUserService"
-          class="org.springframework.security.oauth2.provider.client.ClientDetailsUserDetailsService">
-        <constructor-arg ref="clientDetails"/>
-    </bean>
-
-    <sec:authentication-manager  id="clientAuthenticationManager">
-        <sec:authentication-provider user-service-ref="clientDetailsUserService"/>
-    </sec:authentication-manager>
-
-    <sec:authentication-manager  alias="authenticationManager">
-        <sec:authentication-provider>
-            <sec:user-service>
-                <sec:user name="admin" authorities="USER_ROLE" password="admin"/>
-            </sec:user-service>
-        </sec:authentication-provider>
-    </sec:authentication-manager>
-
-    <oauth:client-details-service id="clientDetails">
-
-        <oauth:client client-id="my-trusted-client"
-                      authorized-grant-types="password,authorization_code,refresh_token,implicit,redirect"
-                      authorities="ROLE_CLIENT, ROLE_TRUSTED_CLIENT"
-                      redirect-uri="/web"
-                      scope="read,write,trust"
-                      access-token-validity="30"
-                      refresh-token-validity="600"/>
-
-    </oauth:client-details-service>
-
-    <sec:global-method-security pre-post-annotations="enabled" proxy-target-class="true">
-        <sec:expression-handler ref="oauthExpressionHandler"/>
-    </sec:global-method-security>
-
-    <oauth:expression-handler id="oauthExpressionHandler"/> -->
-
-
-
-
-    <!-- Security -->
-
-
-    <!--  Spring Security -->
-
-    <!-- scans packages to find and register beans within the application context -->
-    <!-- register beans for handling incoming HTTP requests -->
-    <context:component-scan base-package="com.apache.cxf.spring.security.service" />
-
-
     <bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper">
     </bean>
 
@@ -190,7 +51,7 @@
     </bean>
 
 
-
+    <bean id="springSecurityFilterChain" class="org.springframework.security.web.FilterChainProxy"/>
 
 
     <cxf:bus>
@@ -210,11 +71,10 @@
                 <!--constructor-arg index="0" ref="productSearchController"/-->
             </bean>
         </jaxrs:serviceBeans>
-        <jaxrs:providers>
-            <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider">
-                <property name="mapper" ref="jacksonObjectMapper"/>
-            </bean>
-        </jaxrs:providers>
+        <jaxrs:extensionMappings>
+            <entry key="json" value="application/json"/>
+            <entry key="xml" value="application/xml"/>
+        </jaxrs:extensionMappings>
     </jaxrs:server>
 
 </beans>

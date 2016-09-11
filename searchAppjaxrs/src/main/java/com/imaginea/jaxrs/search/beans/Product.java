@@ -1,8 +1,11 @@
 package com.imaginea.jaxrs.search.beans;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 /**
  * Created by shruthip on 8/31/16.
  */
+@XmlRootElement
 public class Product {
     private String id;
     private String name;
