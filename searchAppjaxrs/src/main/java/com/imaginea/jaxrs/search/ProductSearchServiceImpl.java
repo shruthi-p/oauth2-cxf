@@ -16,7 +16,7 @@ public class ProductSearchServiceImpl implements ProductSearchService {
         List<Product> productList = new ArrayList<Product>();
         Product product = new Product();
         product.setName("Test");
-        product.setDescription("Test Description");
+        product.setDescription("Test Description 1");
         product.setId("123");
         productList.add(product);
 
