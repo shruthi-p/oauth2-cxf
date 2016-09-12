@@ -54,6 +54,10 @@
         <property name="authenticationManager" ref="clientAuthenticationManager"/>
     </bean>
 
+    <bean id="customAuthenticationProvider"
+          class="com.imaginea.jaxrs.search.outh2.ImagineaAuthenticationProvider"/>
+
+
     <bean id="accessDecisionManager" class="org.springframework.security.access.vote.UnanimousBased"
           xmlns="http://www.springframework.org/schema/beans">
         <constructor-arg>
@@ -71,10 +75,10 @@
     </authentication-manager>
 
     <authentication-manager alias="authenticationManager" xmlns="http://www.springframework.org/schema/security">
-        <authentication-provider>
-            <user-service id="userDetailsService">
+        <authentication-provider ref="customAuthenticationProvider">
+            <!--user-service id="userDetailsService">
                 <user name="admin" password="password" authorities="ROLE_USER"/>
-            </user-service>
+            </user-service-->
         </authentication-provider>
     </authentication-manager>
 
